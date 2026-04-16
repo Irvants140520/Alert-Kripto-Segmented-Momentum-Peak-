@@ -1,0 +1,53 @@
+name: Williams %R Trigger (Stage 2)
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Tiap 5 menit
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Watchlist Exists
+      id: check
+      run: |
+        if [ ! -f watchlist.json ]; then
+          echo "empty=true" >> $GITHUB_OUTPUT
+        else
+          COUNT=$(jq '.coins | length' watchlist.json)
+          if [ "$COUNT" -eq "0" ]; then
+            echo "empty=true" >> $GITHUB_OUTPUT
+          else
+            echo "empty=false" >> $GITHUB_OUTPUT
+          fi
+        fi
+    
+    - name: Skip if Empty
+      if: steps.check.outputs.empty == 'true'
+      run: |
+        echo "Watchlist kosong, skip scanning"
+        exit 0
+    
+    - name: Setup Python
+      if: steps.check.outputs.empty == 'false'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      if: steps.check.outputs.empty == 'false'
+      run: |
+        pip install ccxt pandas numpy requests
+    
+    - name: Run Williams Scanner
+      if: steps.check.outputs.empty == 'false'
+      env:
+        BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+        BINANCE_SECRET: ${{ secrets.BINANCE_SECRET }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: python scripts/scan_williams.py

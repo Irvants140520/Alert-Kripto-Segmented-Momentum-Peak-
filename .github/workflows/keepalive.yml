@@ -1,0 +1,18 @@
+name: Keep Alive
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Tiap hari
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          date > last-run.txt
+          git add last-run.txt
+          git commit -m "Keep alive" || exit 0
+          git push
