@@ -27,7 +27,7 @@ jobs:
       env:
         BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
         BINANCE_SECRET: ${{ secrets.BINANCE_SECRET }}
-      run: python scripts/scan_smp.py
+      run: python scripts/scan-smp.py
     
     - name: Commit Watchlist
       run: |
